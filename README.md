@@ -11,7 +11,7 @@
 
 [Write 2-3 sentences describing what this project is, what you did, and why. Example: "This repository documents a series of ______ assessments performed in an isolated VMware home lab. The goal was to build hands-on proficiency with ______ aligned with CySA+ exam objectives."] 
 
-This repository identifies and documents all active connections in the lab environment so that we can establish a baseline of the environemnt which we can always use in the future to review or compare any changes. I use several commands in the command line to identify all connections using ping sweep and nmap scan.
+T
 ---
 
 ## 🧪 Lab Environment
@@ -57,7 +57,6 @@ This repository identifies and documents all active connections in the lab envir
 
 ### 1. [Start a TCPDump capture on eth0, filtered to only show traffic to/from Metasploitable.]
 
-[Brief description of what you did and why] 
 For this task, I opened command prompt in Kali and started a tcp capture using a manual host filter to only show traffic to/from metasploitable. The purpose was to demonstrate using TCPDump to replicate the kind of traffic capture traffic from the target host as we did in the previous tasks using Wireshark. This shows that TCPDump has anlot of the same capabilities as wireshark without the GUI as a command line-only packet capture tool.
 # Command used
 [sudo tcpdump -i eth0 host 192.168.79.130]
@@ -91,19 +90,21 @@ Finding: [What did you discover?]
 I found that the main reason for using TCPDump instead of Wireshark is that it can be used in situations where a server may have a "headless" remote configuration with no GUI available. This makes it much more lightweight/portable for those environments, while Wireshark still offers much deeper analysis capabilities. However, TCPDump and Wireshark do work well together because TCPDump can capture traffic in environments where Wireshark can't run and that capture can later be opened in Wireshark for further analysis.
 
 ### 3. [Capture port 23 telnet traffic using -A flag. Note the Output.]
-[Brief description of what you did and why]
+[I ran a command to capture telnet traffic using TCPDump with -A flag to display packet contents in ASCII. This allows me to read the raw session data in plaintext while logging into metasploitable via telnet from another terminal. ]
 
 # Command used
-[your command here]
+[sudo tcpdump -i eth0 port 23 A -n]
 
 ## Output
+The output shows the live Telnet session between Kali and Metasploitable on port 23. Because the -A flag displays packet contents in readable ASCII, fragments of the actual session. Real data such as the shell prompt(msf@metsasploitable) were visibly directly in the TCPDump output, confirming data was transmitted in clear text.
+
+Finding: [I found that using TCPDump with the -A flag while telnetting into Metasploitable, I captured the login session in plaintext directly in the terminal. Unlike the HTTP example used in previous tasks, no GUI or "Follow Stream" feature is needed to read the text.This confirms that Telnet sends all data completely unencrypted and that even basic packet capture tools are enough to intercept data in a Telnet session. Which proves why Telnet should be disabled and replaced with SSH, which encrypts session data end-to-end.]
 
 
-Finding: [What did you discover?]
 📊 Key Findings Summary
 Port/Service	Tool Used	Risk Level	Notes
 [e.g. 21/tcp FTP]	[e.g. Nmap]	🔴 Critical	[Notes]
-[e.g. 23/tcp Telnet]	[e.g. Wireshark]	🔴 Critical	[Notes]
+[e.g. 23/tcp Telnet]	[e.g. TCPDump]	🔴 Critical	[Transmitted session data, in plaintext. Captured directly via 'tcpdump -A']
 [e.g. 80/tcp HTTP]	[e.g. Nikto]	🟠 High	[Notes]
 [e.g. 3306/tcp MySQL]	[e.g. OpenVAS]	🟠 High	[Notes]
 [e.g. 22/tcp SSH]	[e.g. Nmap]	🟡 Medium	[Notes]
@@ -143,6 +144,12 @@ Reporting & Communication (17%)	[What this lab covers in this domain]
 
 wireshark ~/capture.pcap - opens the file in wireshark directly in one step.
 
+Flags used in TCPDump: 
+-i(interface)
+-w(write)
+-r(read)
+-n(No DNS)
+-A(ASCII output)
 📌 About This Project
 [1-2 sentences about how this fits into your overall portfolio and career goals.]
 
