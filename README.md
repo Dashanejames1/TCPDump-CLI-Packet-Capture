@@ -98,6 +98,11 @@ I found that the main reason for using TCPDump instead of Wireshark is that it c
 ## Output
 The output shows the live Telnet session between Kali and Metasploitable on port 23. Because the -A flag displays packet contents in readable ASCII, fragments of the actual session. Real data such as the shell prompt(msf@metsasploitable) were visibly directly in the TCPDump output, confirming data was transmitted in clear text.
 
+<img width="648" height="281" alt="Screenshot 2026-07-25 110643" src="https://github.com/user-attachments/assets/47c48edb-967a-4b66-9443-918c3e6a2478" />
+
+<img width="650" height="265" alt="Screenshot 2026-07-25 110911" src="https://github.com/user-attachments/assets/e5c84c32-68ce-4192-9162-487809b1e2a1" />
+
+
 Finding: [I found that using TCPDump with the -A flag while telnetting into Metasploitable, I captured the login session in plaintext directly in the terminal. Unlike the HTTP example used in previous tasks, no GUI or "Follow Stream" feature is needed to read the text.This confirms that Telnet sends all data completely unencrypted and that even basic packet capture tools are enough to intercept data in a Telnet session. Which proves why Telnet should be disabled and replaced with SSH, which encrypts session data end-to-end.]
 
 
