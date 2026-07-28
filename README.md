@@ -9,7 +9,7 @@
 
 ## 📋 Overview
 
-[Write 2-3 sentences describing what this project is, what you did, and why. Example: "This repository documents a series of ______ assessments performed in an isolated VMware home lab. The goal was to build hands-on proficiency with ______ aligned with CySA+ exam objectives."] 
+[This repository documents a series of packet capture exercises performed using TCPDump in an isolated VMware home lab against Metasploitable 2. The goal was to build hands-on proficiency with command-line packet capture — including filtering by host, saving captures to file for later analysis in Wireshark, and reading raw plaintext session data — for environments where a GUI tool like Wireshark isn't available.] 
 
 T
 ---
@@ -29,11 +29,9 @@ T
 
 ## 🛠️ Tools Used
 
-- **[TCPDump]** — [What it does]
-- **[Tool 2]** — [What it does]
-- **[Tool 3]** — [What it does]
-- **[Tool 4]** — [What it does]
-
+- **TCPDump** — Command-line packet capture tool used to filter, capture, and save network traffic without a graphical interface
+- **Wireshark** — Used to open and analyze `.pcap` files saved by TCPDump, demonstrating compatibility between the two tools
+- **Telnet** — Used to generate a live plaintext session against Metasploitable to demonstrate unencrypted credential/session exposure
 ---
 
 ## 📁 Repository Structure
@@ -107,62 +105,82 @@ Finding: [I found that using TCPDump with the -A flag while telnetting into Meta
 
 
 📊 Key Findings Summary
-Port/Service	Tool Used	Risk Level	Notes
-[e.g. 21/tcp FTP]	[e.g. Nmap]	🔴 Critical	[Notes]
-[e.g. 23/tcp Telnet]	[e.g. TCPDump]	🔴 Critical	[Transmitted session data, in plaintext. Captured directly via 'tcpdump -A']
-[e.g. 80/tcp HTTP]	[e.g. Nikto]	🟠 High	[Notes]
-[e.g. 3306/tcp MySQL]	[e.g. OpenVAS]	🟠 High	[Notes]
-[e.g. 22/tcp SSH]	[e.g. Nmap]	🟡 Medium	[Notes]
-Risk Levels: 🔴 Critical | 🟠 High | 🟡 Medium | 🟢 Low
+
+| Port/Service | Tool Used | Risk Level | Notes |
+|---|---|---|---|
+| 23/tcp Telnet | TCPDump | 🔴 Critical | Transmits session data in plaintext — captured directly via `tcpdump -A`, no GUI or stream reconstruction needed |
+| N/A (background traffic) | TCPDump | 🟢 Low | Metasploitable's own ARP/DHCP housekeeping traffic — not a vulnerability, but background noise an analyst must learn to distinguish from real activity |
+
+**Risk Levels:** 🔴 Critical | 🟠 High | 🟡 Medium | 🟢 Low
 
 🗺️ MITRE ATT&CK Mapping
-Action Performed	ATT&CK Tactic	Technique ID	Technique Name
-[e.g. Port scanning]	[e.g. Reconnaissance]	[e.g. T1595]	[e.g. Active Scanning]
-[Action]	[Tactic]	[ID]	[Technique]
-[Action]	[Tactic]	[ID]	[Technique]
-[Action]	[Tactic]	[ID]	[Technique]
+
+| Action Performed | ATT&CK Tactic | Technique ID | Technique Name |
+|---|---|---|---|
+| Filtered live packet capture on target host | Reconnaissance | T1595 | Active Scanning |
+| Captured Telnet session in plaintext via TCPDump | Credential Access | T1040 | Network Sniffing |
+| Saved capture to `.pcap` for offline analysis | Collection | T1005 | Data from Local System |
+
+
 🛡️ Defensive Recommendations
 Based on findings, the following remediations would be recommended in a real environment:
 
-[Finding 1] — [Recommendation]
-[Finding 2] — [Recommendation]
-[Finding 3] — [Recommendation]
-[Finding 4] — [Recommendation]
-[Finding 5] — [Recommendation]
-📚 CySA+ Exam Relevance
-This lab directly maps to the following CompTIA CySA+ (CS0-003) exam domains:
+1. **Telnet transmits data in plaintext (Critical)** — Disable Telnet entirely and replace with SSH, which encrypts session data end-to-end.
+2. **Unrestricted network sniffing possible** — Segment sensitive traffic onto encrypted channels (SSH, TLS) so that packet capture alone cannot reveal credentials or session data.
+3. **Background system traffic can mask real threats** — Establish a baseline of normal host chatter (ARP, DHCP) so anomalous traffic is easier to identify during incident response.
 
-Domain	Coverage
-Security Operations (33%)	[What this lab covers in this domain]
-Vulnerability Management (30%)	[What this lab covers in this domain]
-Incident Response (20%)	[What this lab covers in this domain]
-Reporting & Communication (17%)	[What this lab covers in this domain]
+
 🔑 Technical Notes
 [Any important notes about your lab setup, workarounds, or lessons learned. Example:
 
+
 "Always add the -n flag to Nmap scans in this VMware environment to prevent DNS resolution hangs."]
 
--sP and -sT contradict eachother (Can't be used together because -sP means just do a ping/host-discovery sweep, skip ports entirely but -sT tells Nmap to do a full TCP connect port scan. These commands contradict eachother.)
+-sP and -sT contradict each other (Can't be used together because -sP means just do a ping/host-discovery sweep, skip ports entirely but -sT tells Nmap to do a full TCP connect port scan. These commands contradict each other.)
 
 # Any important commands or workarounds
--w capture.pcap - means -w(write file to:) and capture.pcap is the file the packets captured are being sent to that are later analyzed by Wireshark.
 
-wireshark ~/capture.pcap - opens the file in wireshark directly in one step.
 
-Flags used in TCPDump: 
--i(interface)
--w(write)
--r(read)
--n(No DNS)
--A(ASCII output)
+# Task 1: Filtered capture — only show traffic to/from Metasploitable
+sudo tcpdump -i eth0 host 192.168.79.130
+
+# Task 2: Save a capture to a .pcap file for later analysis in Wireshark
+sudo tcpdump -i eth0 -w capture.pcap
+
+# Open a saved .pcap file directly in Wireshark from the terminal
+wireshark ~/capture.pcap
+
+# Task 3: Capture Telnet traffic and display contents in readable ASCII
+sudo tcpdump -i eth0 port 23 -A -n
+
+# Flags used in TCPDump:
+# -i   interface to capture on (e.g. eth0)
+# -w   write captured packets to a file
+# -r   read packets from a saved file
+# -n   don't resolve hostnames/IPs (avoids DNS hangs)
+# -A   display packet contents in ASCII (readable plaintext)
+# host <IP>   capture filter — only show traffic to/from a specific host
+# port <#>    capture filter — only show traffic on a specific port
+
+# Workaround: -w and -A require a space before the flag — e.g. "port 23 A -n"
+# without a dash in front of A will not work as intended; always confirm
+# each flag is written as its own separate "-X" argument.
+
+# -w capture.pcap - means -w(write file to:) and capture.pcap is the file the packets captured are being sent to that are later analyzed by Wireshark.
+
+# wireshark ~/capture.pcap - opens the file in wireshark directly in one step.
+
 📌 About This Project
-[1-2 sentences about how this fits into your overall portfolio and career goals.]
+[This repository is part of my broader cybersecurity portfolio, focused on building practical, tool-agnostic packet analysis skills — since real-world environments often don't provide a GUI, and analysts need to be comfortable working from the command line alone.]
 
 Related repositories:
 
-[Repo Name] — [Brief description]
-[Repo Name] — [Brief description]
-[Repo Name] — Coming soon
+- `Nmap-Host-Discovery-and-Lab-Baseline` — Established a baseline of the lab network using ping sweeps and host discovery, documenting the target environment before deeper scanning began
+- `Nmap-Scan-Types-SYN-vs-TCP-vs-UDP` — Compared SYN, TCP connect, and UDP scan types against the target, examining differences in speed, stealth, and reliability
+- `Wireshark-Capture-and-Analyze-Traffic` — Captured and analyzed the same kind of traffic using Wireshark's GUI, including Follow TCP Stream and display filtering
+- `Nmap-Scripting-Engine` — Used Nmap's scripting engine to detect and, in one case, exploit the vsFTPd backdoor also referenced in this repo's Telnet findings
+- `Service-Version-Detection-and-OS-Fingerprinting` — Identified exact software versions on Metasploitable and researched CVEs tied to them
+
 👤 Author
 Dashane James
 Senior Field Service Technician → Cybersecurity Analyst
