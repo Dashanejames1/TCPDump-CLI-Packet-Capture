@@ -1,4 +1,4 @@
-# 🔍 # TCPDump-CLI-Packet-Capture
+# 🔍 TCPDump-CLI-Packet-Capture
 
 **Author:** Dashane James  
 **Lab Environment:** VMware Workstation | Kali Linux | Metasploitable 2 | TCPDump  
